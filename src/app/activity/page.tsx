@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Lottie } from "@/components/lottie";
+import { PageTransition } from "@/components/page-transition";
 import { getRemoteConfig } from "@/lib/remote-config/server";
 import { createClient } from "@/lib/supabase/server";
 import { grantedScopes } from "@/lib/google-health/oauth";
@@ -182,215 +184,218 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
   ].filter((s) => s !== null);
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
-          <p className="mt-1 text-ink-muted">Activity, sleep and heart data synced from Google Health.</p>
+    <PageTransition>
+      <div>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Activity</h1>
+            <p className="mt-1 text-ink-muted">Activity, sleep and heart data synced from Google Health.</p>
+          </div>
+          {conn && (
+            <div className="flex flex-wrap items-center gap-2">
+              <form action={syncNow} data-cta="health_sync">
+                <PendingButton
+                  pendingLabel="Syncing…"
+                  className="rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-white transition hover:bg-primary-700"
+                >
+                  Sync now
+                </PendingButton>
+              </form>
+              <form action={disconnect} data-cta="health_disconnect">
+                <PendingButton
+                  pendingLabel="Disconnecting…"
+                  className="rounded-lg border border-line px-4 py-2.5 font-semibold transition hover:border-secondary-300"
+                >
+                  Disconnect
+                </PendingButton>
+              </form>
+            </div>
+          )}
         </div>
-        {conn && (
-          <div className="flex flex-wrap items-center gap-2">
-            <form action={syncNow} data-cta="health_sync">
-              <PendingButton
-                pendingLabel="Syncing…"
-                className="rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-white transition hover:bg-primary-700"
-              >
-                Sync now
-              </PendingButton>
-            </form>
-            <form action={disconnect} data-cta="health_disconnect">
-              <PendingButton
-                pendingLabel="Disconnecting…"
-                className="rounded-lg border border-line px-4 py-2.5 font-semibold transition hover:border-secondary-300"
-              >
-                Disconnect
-              </PendingButton>
-            </form>
+
+        {notice && (
+          <p
+            role="status"
+            className={`mt-6 rounded-lg px-3 py-2 text-sm ${
+              notice.tone === "ok" ? "bg-primary-50 text-primary-800" : "bg-secondary-50 text-secondary-800"
+            }`}
+          >
+            {notice.text}
+            {notice.tone === "error" && typeof reason === "string" && (
+              <span className="mt-1 block text-xs opacity-80">Details: {reason}</span>
+            )}
+          </p>
+        )}
+
+        {!conn && (
+          <div className="mt-8 rounded-2xl border border-line bg-surface p-8 text-center">
+            <Lottie src="/lottie/activity-watch.json" className="mx-auto mb-2 h-40 w-40" />
+          <h2 className="text-lg font-semibold">Connect Google Health</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
+              Link your Google account to bring in steps, workouts, sleep and heart data from your phone or Fitbit.
+              FitTrack only asks for read access.
+            </p>
+            {/* A plain link: the route handler redirects to Google's consent screen. */}
+            <a
+              href="/api/google-health/connect"
+              data-cta="health_connect"
+              className="mt-5 inline-block rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-white transition hover:bg-primary-700"
+            >
+              Connect Google account
+            </a>
           </div>
         )}
-      </div>
 
-      {notice && (
-        <p
-          role="status"
-          className={`mt-6 rounded-lg px-3 py-2 text-sm ${
-            notice.tone === "ok" ? "bg-primary-50 text-primary-800" : "bg-secondary-50 text-secondary-800"
-          }`}
-        >
-          {notice.text}
-          {notice.tone === "error" && typeof reason === "string" && (
-            <span className="mt-1 block text-xs opacity-80">Details: {reason}</span>
-          )}
-        </p>
-      )}
-
-      {!conn && (
-        <div className="mt-8 rounded-2xl border border-line bg-surface p-8 text-center">
-          <h2 className="text-lg font-semibold">Connect Google Health</h2>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink-muted">
-            Link your Google account to bring in steps, workouts, sleep and heart data from your phone or Fitbit.
-            FitTrack only asks for read access.
+        {conn && (
+          <p className="mt-4 text-sm text-ink-muted">
+            {conn.last_synced_at ? `Last synced ${timeAgo(conn.last_synced_at)}.` : "Not synced yet."}
           </p>
-          {/* A plain link: the route handler redirects to Google's consent screen. */}
-          <a
-            href="/api/google-health/connect"
-            data-cta="health_connect"
-            className="mt-5 inline-block rounded-lg bg-primary-600 px-4 py-2.5 font-semibold text-white transition hover:bg-primary-700"
-          >
-            Connect Google account
-          </a>
-        </div>
-      )}
-
-      {conn && (
-        <p className="mt-4 text-sm text-ink-muted">
-          {conn.last_synced_at ? `Last synced ${timeAgo(conn.last_synced_at)}.` : "Not synced yet."}
-        </p>
-      )}
-      {conn?.last_sync_error && (
-        <p role="alert" className="mt-3 rounded-lg bg-secondary-50 px-3 py-2 text-sm text-secondary-800">
-          {conn.last_sync_error.startsWith("Some data") ? "" : "Last sync failed: "}
-          {conn.last_sync_error}
-        </p>
-      )}
-
-      {conn && missing.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-900">
-          <p>
-            <span className="font-semibold">Get more from your watch.</span> Allow read access to {missing.join(" and ")}{" "}
-            to see sleep stages, resting heart rate, HRV, SpO₂ and weight.
+        )}
+        {conn?.last_sync_error && (
+          <p role="alert" className="mt-3 rounded-lg bg-secondary-50 px-3 py-2 text-sm text-secondary-800">
+            {conn.last_sync_error.startsWith("Some data") ? "" : "Last sync failed: "}
+            {conn.last_sync_error}
           </p>
-          <a
-            href="/api/google-health/connect"
-            data-cta="health_allow_more"
-            className="rounded-lg bg-primary-600 px-3 py-2 font-semibold text-white transition hover:bg-primary-700"
-          >
-            Allow access
-          </a>
-        </div>
-      )}
+        )}
 
-      {today && (
-        <>
-          <section className="mt-6 grid gap-4 sm:grid-cols-3">
-            <Stat label="Steps" value={today.steps !== null ? fmtInt.format(today.steps) : "—"} />
-            <Stat label="Distance" value={today.distance_m !== null ? km(today.distance_m) : "—"} />
-            <Stat label="Calories burned" value={today.calories_kcal !== null ? kcal(today.calories_kcal) : "—"} />
-          </section>
-          <p className="mt-2 text-xs text-ink-muted">
-            Totals for {dayLabel(latest!, { weekday: "long", month: "short", day: "numeric" })}.
-          </p>
+        {conn && missing.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary-200 bg-primary-50 p-4 text-sm text-primary-900">
+            <p>
+              <span className="font-semibold">Get more from your watch.</span> Allow read access to {missing.join(" and ")}{" "}
+              to see sleep stages, resting heart rate, HRV, SpO₂ and weight.
+            </p>
+            <a
+              href="/api/google-health/connect"
+              data-cta="health_allow_more"
+              className="rounded-lg bg-primary-600 px-3 py-2 font-semibold text-white transition hover:bg-primary-700"
+            >
+              Allow access
+            </a>
+          </div>
+        )}
 
-          {extraStats.length > 0 && (
-            <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {extraStats.map((s) => (
-                <div key={s.label} className="rounded-2xl border border-line bg-surface p-4">
-                  <p className="text-xs text-ink-muted">{s.label}</p>
-                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight">{s.value}</p>
-                  {s.note && <p className="text-xs text-ink-muted">{s.note}</p>}
-                </div>
-              ))}
+        {today && (
+          <>
+            <section className="mt-6 grid gap-4 sm:grid-cols-3">
+              <Stat label="Steps" value={today.steps !== null ? fmtInt.format(today.steps) : "—"} />
+              <Stat label="Distance" value={today.distance_m !== null ? km(today.distance_m) : "—"} />
+              <Stat label="Calories burned" value={today.calories_kcal !== null ? kcal(today.calories_kcal) : "—"} />
             </section>
-          )}
+            <p className="mt-2 text-xs text-ink-muted">
+              Totals for {dayLabel(latest!, { weekday: "long", month: "short", day: "numeric" })}.
+            </p>
 
-          {sleep && <SleepCard night={sleep} />}
+            {extraStats.length > 0 && (
+              <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {extraStats.map((s) => (
+                  <div key={s.label} className="reveal rounded-2xl border border-line bg-surface p-4">
+                    <p className="text-xs text-ink-muted">{s.label}</p>
+                    <p className="mt-1 text-lg font-bold tabular-nums tracking-tight">{s.value}</p>
+                    {s.note && <p className="text-xs text-ink-muted">{s.note}</p>}
+                  </div>
+                ))}
+              </section>
+            )}
 
-          <section className="mt-8 rounded-2xl border border-line bg-surface p-5">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-lg font-semibold">Last {SYNC_DAYS} days</h2>
-              {available.length > 1 && (
-                <nav className="flex flex-wrap gap-1.5 text-sm font-medium" aria-label="Chart metric">
-                  {available.map((k) => (
-                    <Link
-                      key={k}
-                      href={`/activity?metric=${k}`}
-                      data-cta="activity_chart_metric"
-                      scroll={false}
-                      className={`rounded-full border px-3 py-1 transition ${
-                        k === chartKey
-                          ? "border-primary-600 bg-primary-600 text-white"
-                          : "border-line text-ink-muted hover:text-ink"
-                      }`}
-                    >
-                      {CHARTS[k].label}
-                    </Link>
-                  ))}
-                </nav>
-              )}
-            </div>
-            <BarChart series={series} chartKey={chartKey} latest={latest!} />
+            {sleep && <SleepCard night={sleep} />}
 
-            <details className="mt-5 text-sm">
-              <summary className="cursor-pointer text-ink-muted hover:text-ink">Show as table</summary>
-              <div className="mt-3 overflow-x-auto">
-                <table className="w-full whitespace-nowrap text-left">
-                  <thead className="text-ink-muted">
-                    <tr>
-                      <th className="py-1.5 pr-4 font-medium">Day</th>
-                      <th className="py-1.5 pr-4 text-right font-medium">Steps</th>
-                      <th className="py-1.5 pr-4 text-right font-medium">Distance</th>
-                      <th className="py-1.5 pr-4 text-right font-medium">Calories</th>
-                      <th className="py-1.5 pr-4 text-right font-medium">Zone min</th>
-                      <th className="py-1.5 pr-4 text-right font-medium">Sleep</th>
-                      <th className="py-1.5 text-right font-medium">Resting HR</th>
-                    </tr>
-                  </thead>
-                  <tbody className="tabular-nums">
-                    {[...series].reverse().map((d) => (
-                      <tr key={d.day} className="border-t border-line">
-                        <td className="py-1.5 pr-4">{dayLabel(d.day, { weekday: "short", month: "short", day: "numeric" })}</td>
-                        <td className="py-1.5 pr-4 text-right">{d.steps !== null ? fmtInt.format(d.steps) : "—"}</td>
-                        <td className="py-1.5 pr-4 text-right">{d.distance_m !== null ? km(d.distance_m) : "—"}</td>
-                        <td className="py-1.5 pr-4 text-right">{d.calories_kcal !== null ? kcal(d.calories_kcal) : "—"}</td>
-                        <td className="py-1.5 pr-4 text-right">{d.active_zone_minutes ?? "—"}</td>
-                        <td className="py-1.5 pr-4 text-right">{d.sleep_min !== null ? hoursMins(d.sleep_min) : "—"}</td>
-                        <td className="py-1.5 text-right">{d.resting_hr !== null ? `${d.resting_hr} bpm` : "—"}</td>
-                      </tr>
+            <section className="reveal mt-8 rounded-2xl border border-line bg-surface p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-lg font-semibold">Last {SYNC_DAYS} days</h2>
+                {available.length > 1 && (
+                  <nav className="flex flex-wrap gap-1.5 text-sm font-medium" aria-label="Chart metric">
+                    {available.map((k) => (
+                      <Link
+                        key={k}
+                        href={`/activity?metric=${k}`}
+                        data-cta="activity_chart_metric"
+                        scroll={false}
+                        className={`rounded-full border px-3 py-1 transition ${
+                          k === chartKey
+                            ? "border-primary-600 bg-primary-600 text-white"
+                            : "border-line text-ink-muted hover:text-ink"
+                        }`}
+                      >
+                        {CHARTS[k].label}
+                      </Link>
                     ))}
-                  </tbody>
-                </table>
+                  </nav>
+                )}
               </div>
-            </details>
-          </section>
-        </>
-      )}
+              <BarChart series={series} chartKey={chartKey} latest={latest!} />
 
-      {conn && exercises && exercises.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-semibold">Tracked workouts</h2>
-          <p className="mt-0.5 text-sm text-ink-muted">Sessions recorded by your phone or watch.</p>
-          <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-surface">
-            {exercises.map((e: ExerciseRow) => (
-              <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3">
-                <div>
-                  <p className="font-medium">{exerciseLabel(e)}</p>
-                  <p className="text-xs text-ink-muted">
-                    <LocalTime iso={e.started_at} options={{ weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
-                  </p>
+              <details className="mt-5 text-sm">
+                <summary className="cursor-pointer text-ink-muted hover:text-ink">Show as table</summary>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="w-full whitespace-nowrap text-left">
+                    <thead className="text-ink-muted">
+                      <tr>
+                        <th className="py-1.5 pr-4 font-medium">Day</th>
+                        <th className="py-1.5 pr-4 text-right font-medium">Steps</th>
+                        <th className="py-1.5 pr-4 text-right font-medium">Distance</th>
+                        <th className="py-1.5 pr-4 text-right font-medium">Calories</th>
+                        <th className="py-1.5 pr-4 text-right font-medium">Zone min</th>
+                        <th className="py-1.5 pr-4 text-right font-medium">Sleep</th>
+                        <th className="py-1.5 text-right font-medium">Resting HR</th>
+                      </tr>
+                    </thead>
+                    <tbody className="tabular-nums">
+                      {[...series].reverse().map((d) => (
+                        <tr key={d.day} className="border-t border-line">
+                          <td className="py-1.5 pr-4">{dayLabel(d.day, { weekday: "short", month: "short", day: "numeric" })}</td>
+                          <td className="py-1.5 pr-4 text-right">{d.steps !== null ? fmtInt.format(d.steps) : "—"}</td>
+                          <td className="py-1.5 pr-4 text-right">{d.distance_m !== null ? km(d.distance_m) : "—"}</td>
+                          <td className="py-1.5 pr-4 text-right">{d.calories_kcal !== null ? kcal(d.calories_kcal) : "—"}</td>
+                          <td className="py-1.5 pr-4 text-right">{d.active_zone_minutes ?? "—"}</td>
+                          <td className="py-1.5 pr-4 text-right">{d.sleep_min !== null ? hoursMins(d.sleep_min) : "—"}</td>
+                          <td className="py-1.5 text-right">{d.resting_hr !== null ? `${d.resting_hr} bpm` : "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <p className="text-sm tabular-nums text-ink-muted">
-                  {[
-                    e.active_duration_s !== null && hoursMins(e.active_duration_s / 60),
-                    e.distance_m ? km(e.distance_m) : null,
-                    e.calories_kcal !== null && kcal(e.calories_kcal),
-                    e.avg_hr !== null && `${e.avg_hr} bpm avg`,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+              </details>
+            </section>
+          </>
+        )}
 
-      {conn && !today && !conn.last_sync_error && (
-        <p className="mt-6 rounded-2xl border border-line bg-surface p-6 text-sm text-ink-muted">
-          No activity found in the last {SYNC_DAYS} days. Make sure your phone or Fitbit is syncing to your
-          Google account, then press “Sync now”.
-        </p>
-      )}
-    </div>
+        {conn && exercises && exercises.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-lg font-semibold">Tracked workouts</h2>
+            <p className="mt-0.5 text-sm text-ink-muted">Sessions recorded by your phone or watch.</p>
+            <ul className="mt-3 divide-y divide-line rounded-2xl border border-line bg-surface">
+              {exercises.map((e: ExerciseRow) => (
+                <li key={e.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-5 py-3">
+                  <div>
+                    <p className="font-medium">{exerciseLabel(e)}</p>
+                    <p className="text-xs text-ink-muted">
+                      <LocalTime iso={e.started_at} options={{ weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }} />
+                    </p>
+                  </div>
+                  <p className="text-sm tabular-nums text-ink-muted">
+                    {[
+                      e.active_duration_s !== null && hoursMins(e.active_duration_s / 60),
+                      e.distance_m ? km(e.distance_m) : null,
+                      e.calories_kcal !== null && kcal(e.calories_kcal),
+                      e.avg_hr !== null && `${e.avg_hr} bpm avg`,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {conn && !today && !conn.last_sync_error && (
+          <p className="mt-6 rounded-2xl border border-line bg-surface p-6 text-sm text-ink-muted">
+            No activity found in the last {SYNC_DAYS} days. Make sure your phone or Fitbit is syncing to your
+            Google account, then press “Sync now”.
+          </p>
+        )}
+      </div>
+    </PageTransition>
   );
 }
 
@@ -425,7 +430,7 @@ function SleepCard({ night }: { night: DayRow }) {
   const total = stages.reduce((sum, s) => sum + s.minutes, 0);
 
   return (
-    <section className="mt-4 rounded-2xl border border-line bg-surface p-5">
+    <section className="reveal mt-4 rounded-2xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className="text-lg font-semibold">Sleep</h2>
         <p className="text-sm text-ink-muted">
@@ -478,16 +483,16 @@ function BarChart({ series, chartKey, latest }: { series: DayRow[]; chartKey: Ch
       <div className="relative mt-6">
         <div className="pointer-events-none absolute inset-x-0 top-0 border-t border-dashed border-line" />
         <span className="absolute -top-5 right-0 text-xs text-ink-muted">{chart.format(Math.round(max))}</span>
-        <div className="flex h-44 items-end gap-0.5 border-b border-line" role="img" aria-label={`Daily ${chart.label.toLowerCase()} bar chart`}>
+        <div key={chartKey} className="flex h-44 items-end gap-0.5 border-b border-line" role="img" aria-label={`Daily ${chart.label.toLowerCase()} bar chart`}>
           {series.map((d, i) => {
             const v = values[i];
             return (
               <div key={d.day} tabIndex={0} className="group relative flex h-full flex-1 items-end outline-none">
                 <div
-                  className={`w-full rounded-t-sm transition ${
+                  className={`bar-grow w-full rounded-t-sm transition ${
                     d.day === latest ? "bg-primary-600" : "bg-primary-400"
                   } group-hover:bg-primary-700 group-focus:bg-primary-700`}
-                  style={{ height: v ? `${(v / max) * 100}%` : 0 }}
+                  style={{ height: v ? `${(v / max) * 100}%` : 0, "--i": i } as React.CSSProperties}
                 />
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded-md border border-line bg-surface px-2 py-1 text-xs shadow-sm group-hover:block group-focus:block">
                   <div className="text-ink-muted">{dayLabel(d.day, { weekday: "short", month: "short", day: "numeric" })}</div>

@@ -13,6 +13,10 @@ export type AppEvents = {
   login: { method: "email" | "google" };
   logout: Record<string, never>;
   workout_logged: { exercise_count: number; duration_min?: number };
+  ghost_beaten: { sets: number };
+  live_started: Record<string, never>;
+  live_set_sent: { set_number: number };
+  live_cheer_sent: Record<string, never>;
   meal_logged: { calories?: number; meal_type?: string };
   chat_opened: Record<string, never>;
   chat_message_sent: { length: number };

@@ -79,6 +79,13 @@ body {
   color: var(--color-ink);
 }
 
+/* Keep the footer visible above a page's fixed bottom action bar on phones. */
+@media (max-width: 639px) {
+  body:has(.mobile-action-bar) .site-footer {
+    padding-bottom: 5rem;
+  }
+}
+
 /* Exercise demo: the end-position photo fades in and out over the start photo. */
 .demo-end-frame {
   animation: demo-rep 3s ease-in-out infinite;
@@ -94,5 +101,188 @@ body {
   .demo-end-frame {
     animation: none;
     opacity: 0;
+  }
+}
+
+/* ==========================================================================
+ * Motion. Everything below is CSS-only and switched off for people who
+ * prefer reduced motion (see the block at the end).
+ * ========================================================================== */
+
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-exit: 150ms;
+  --duration-enter: 220ms;
+  --duration-move: 380ms;
+  /* How far pages slide on navigation: native-feeling on phones, subtle on desktop. */
+  --slide-distance: 40px;
+}
+@media (max-width: 639px) {
+  :root {
+    --slide-distance: 28vw;
+  }
+}
+
+/* --- Page transitions (React <ViewTransition>, see components/page-transition.tsx) --- */
+
+/* The header is the fixed reference point: it never slides. */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 10;
+}
+
+::view-transition-old(.nav-forward) {
+  --slide-offset: calc(var(--slide-distance) * -1);
+  animation:
+    var(--duration-exit) ease-in both vt-fade reverse,
+    var(--duration-move) var(--ease-out) both vt-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: var(--slide-distance);
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both vt-fade,
+    var(--duration-move) var(--ease-out) both vt-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: var(--slide-distance);
+  animation:
+    var(--duration-exit) ease-in both vt-fade reverse,
+    var(--duration-move) var(--ease-out) both vt-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: calc(var(--slide-distance) * -1);
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both vt-fade,
+    var(--duration-move) var(--ease-out) both vt-slide;
+}
+/* Tabs and other untyped navigations: a quick fade with a small rise. */
+::view-transition-old(.page-fade) {
+  animation: var(--duration-exit) ease-in both vt-fade reverse;
+}
+::view-transition-new(.page-fade) {
+  animation:
+    var(--duration-enter) ease-out var(--duration-exit) both vt-fade,
+    var(--duration-move) var(--ease-out) both vt-rise;
+}
+
+@keyframes vt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes vt-slide {
+  from { translate: var(--slide-offset) 0; }
+  to { translate: 0 0; }
+}
+@keyframes vt-rise {
+  from { translate: 0 12px; }
+  to { translate: 0 0; }
+}
+
+/* --- Entrance: staggered fade-up. Set --i on each element for its place in the sequence. --- */
+
+.enter-up {
+  animation: enter-up 450ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+@keyframes enter-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Hero animation switching slides: a quick fade. */
+.slide-in {
+  animation: slide-in 350ms var(--ease-out) both;
+}
+@keyframes slide-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Soft, still glow behind the hero animation. */
+.hero-glow {
+  background: radial-gradient(closest-side, color-mix(in oklab, var(--color-primary-500) 35%, transparent), transparent);
+  filter: blur(18px);
+  opacity: 0.8;
+}
+
+/* --- Phones: cards rise into view as you scroll (where scroll-driven animations exist). --- */
+
+@media (max-width: 767px) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --- Touch screens: a small press-in on buttons and tappable cards. --- */
+
+@media (hover: none) and (pointer: coarse) {
+  a[data-cta],
+  button:not(:disabled) {
+    transition: transform 120ms var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+  a[data-cta]:active,
+  button:not(:disabled):active {
+    transform: scale(0.96);
+  }
+}
+
+/* --- Ghost lifter: a small pop when a set beats (or the score changes). --- */
+
+.ghost-pop {
+  animation: ghost-pop 320ms var(--ease-out);
+}
+@keyframes ghost-pop {
+  0% { transform: scale(0.8); }
+  60% { transform: scale(1.15); }
+  100% { transform: none; }
+}
+
+/* Live workout: a soft pulse on the "connected" dot. */
+.live-dot {
+  box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary-500) 60%, transparent);
+  animation: live-dot 2s ease-out infinite;
+}
+@keyframes live-dot {
+  to { box-shadow: 0 0 0 8px transparent; }
+}
+
+/* --- Chart bars grow from the baseline, one after another. --- */
+
+.bar-grow {
+  transform-origin: bottom;
+  animation: bar-grow 700ms var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 35ms);
+}
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+  .enter-up,
+  .slide-in,
+  .reveal,
+  .bar-grow,
+  .ghost-pop,
+  .live-dot {
+    animation: none !important;
+  }
+  a[data-cta]:active,
+  button:active {
+    transform: none !important;
   }
 }

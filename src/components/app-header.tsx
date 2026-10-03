@@ -5,7 +5,7 @@ import { ThemeToggle } from "./theme-toggle";
 
 export function AppHeader({ email }: { email?: string }) {
   return (
-    <header className="border-b border-line bg-surface">
+    <header className="border-b border-line bg-surface" style={{ viewTransitionName: "site-header" }}>
       {/* On phones the nav drops to its own row below the logo and sign-out button. */}
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-3">
         <Link href="/" className="text-lg font-bold tracking-tight">

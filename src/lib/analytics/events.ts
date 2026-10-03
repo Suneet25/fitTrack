@@ -61,6 +61,13 @@ export const CTAS = {
   health_disconnect: { event: "health_disconnected", description: "Activity “Disconnect”" },
   activity_chart_metric: { event: "cta_click", description: "Activity chart metric chip" },
 
+  // Live workouts (remote training partner)
+  live_start: { event: "live_start_clicked", description: "Log form: “Go live”" },
+  live_share: { event: "live_invite_shared", description: "Live panel: “Invite a friend”" },
+  live_join: { event: "live_join_clicked", description: "Invite page: “Join live workout”" },
+  live_send_set: { event: "cta_click", description: "Live: ✓ share a set with partners" },
+  live_cheer: { event: "cta_click", description: "Live: 💪 cheer a partner" },
+
   // Remote Config driven
   announcement_banner: { event: "announcement_clicked", description: "Site-wide announcement banner link" },
 } as const satisfies Record<string, CtaConfig>;
@@ -82,4 +89,8 @@ export const CODE_EVENTS = {
   sign_up: "Sign-up succeeded",
   logout: "Signed out",
   workout_logged: "Workout saved (exercise_count, duration_min)",
+  ghost_beaten: "Workout saved with sets that beat the ghost (sets)",
+  live_started: "Live workout started",
+  live_set_sent: "Set shared with live partners (set_number)",
+  live_cheer_sent: "Cheer sent to a live partner",
 } as const;

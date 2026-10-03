@@ -3,6 +3,7 @@ import { GeistSans as geistSans } from "geist/font/sans";
 import { GeistMono as geistMono } from "geist/font/mono";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { SiteFooter } from "@/components/site-footer";
 import { getTheme } from "@/components/theme-toggle";
 import { APP } from "@/config/app";
 import { RemoteConfigProvider } from "@/lib/remote-config/client";
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           <AnalyticsProvider userId={userId} />
           <AnnouncementBanner />
           {children}
+          <SiteFooter />
         </RemoteConfigProvider>
       </body>
     </html>
