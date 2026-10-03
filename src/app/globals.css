@@ -1,59 +1,98 @@
 @import "tailwindcss";
 
 /*
+ * Dark mode: the <html> data-theme attribute ("light" | "dark") pins a theme;
+ * without it the OS setting wins. `dark:` utilities follow the same rule.
+ */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme]), :root:not([data-theme]) *) {
+      @slot;
+    }
+  }
+}
+
+:root {
+  color-scheme: light dark;
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/*
  * Theme tokens.
  * Tailwind v4 keeps its "config" in CSS: every --color-* below becomes a
  * utility class, e.g. bg-primary-500, text-secondary-600, border-primary-200.
+ *
+ * light-dark(light, dark) picks a value from the active color-scheme above.
+ * In dark mode the tints (50–300, used for backgrounds/borders) become deep
+ * tints and the darks (800–950, used for text) become light, so existing
+ * class pairs like "bg-primary-100 text-primary-800" keep working. 400–700
+ * (solid buttons, bars) are shared.
  */
 @theme {
   /* Primary — energetic green (actions, progress, success) */
-  --color-primary-50: #ecfdf3;
-  --color-primary-100: #d1fae0;
-  --color-primary-200: #a6f3c6;
-  --color-primary-300: #6ce7a6;
+  --color-primary-50: light-dark(#ecfdf3, #0e2219);
+  --color-primary-100: light-dark(#d1fae0, #113124);
+  --color-primary-200: light-dark(#a6f3c6, #1a4a33);
+  --color-primary-300: light-dark(#6ce7a6, #24704a);
   --color-primary-400: #33d282;
   --color-primary-500: #10b866;
   --color-primary-600: #059652;
   --color-primary-700: #077744;
-  --color-primary-800: #0b5e38;
-  --color-primary-900: #0b4d30;
-  --color-primary-950: #022b1a;
+  --color-primary-800: light-dark(#0b5e38, #a6f3c6);
+  --color-primary-900: light-dark(#0b4d30, #d1fae0);
+  --color-primary-950: light-dark(#022b1a, #ecfdf3);
 
   /* Secondary — warm orange (highlights, streaks, calories) */
-  --color-secondary-50: #fff6ed;
-  --color-secondary-100: #ffead4;
-  --color-secondary-200: #ffd1a8;
-  --color-secondary-300: #ffb070;
+  --color-secondary-50: light-dark(#fff6ed, #2a1709);
+  --color-secondary-100: light-dark(#ffead4, #3a1f0c);
+  --color-secondary-200: light-dark(#ffd1a8, #5a2d10);
+  --color-secondary-300: light-dark(#ffb070, #8a4215);
   --color-secondary-400: #ff8437;
   --color-secondary-500: #ff6310;
   --color-secondary-600: #f04806;
   --color-secondary-700: #c73407;
-  --color-secondary-800: #9e2b0e;
-  --color-secondary-900: #7f270f;
-  --color-secondary-950: #451005;
+  --color-secondary-800: light-dark(#9e2b0e, #ffd1a8);
+  --color-secondary-900: light-dark(#7f270f, #ffead4);
+  --color-secondary-950: light-dark(#451005, #fff6ed);
 
-  /* Neutral surfaces */
-  --color-surface: #ffffff;
-  --color-surface-muted: #f6f7f9;
-  --color-ink: #12161c;
-  --color-ink-muted: #5b6573;
-  --color-line: #e4e7ec;
+  /* Neutral surfaces — cards (surface) sit a step above the page (surface-muted) */
+  --color-surface: light-dark(#ffffff, #151a21);
+  --color-surface-muted: light-dark(#f6f7f9, #0c0f13);
+  --color-ink: light-dark(#12161c, #eef1f5);
+  --color-ink-muted: light-dark(#5b6573, #9aa4b4);
+  --color-line: light-dark(#e4e7ec, #29313b);
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-surface: #0f1318;
-    --color-surface-muted: #161b22;
-    --color-ink: #eef1f5;
-    --color-ink-muted: #98a2b3;
-    --color-line: #262d36;
-  }
-}
-
 body {
   background: var(--color-surface-muted);
   color: var(--color-ink);
+}
+
+/* Exercise demo: the end-position photo fades in and out over the start photo. */
+.demo-end-frame {
+  animation: demo-rep 3s ease-in-out infinite;
+}
+
+@keyframes demo-rep {
+  0%, 15% { opacity: 0; }
+  45%, 65% { opacity: 1; }
+  95%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-end-frame {
+    animation: none;
+    opacity: 0;
+  }
 }

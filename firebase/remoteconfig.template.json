@@ -1,0 +1,39 @@
+{
+  "parameters": {
+    "google_health_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Kill switch for Google Health: hides Activity and blocks connect/sync when false.",
+      "valueType": "BOOLEAN"
+    },
+    "activity_auto_sync_minutes": {
+      "defaultValue": {
+        "value": "60"
+      },
+      "description": "Auto-sync Google Health when the Activity page is opened and data is older than this.",
+      "valueType": "NUMBER"
+    },
+    "announcement": {
+      "defaultValue": {
+        "value": "{\"text\":\"\"}"
+      },
+      "description": "Site-wide banner, e.g. {\"text\":\"New: sleep tracking\",\"href\":\"/activity\",\"tone\":\"info\"}. Empty text hides it.",
+      "valueType": "JSON"
+    },
+    "hero_title": {
+      "defaultValue": {
+        "value": "Your workouts and diet, *finally in one place.*"
+      },
+      "description": "Landing page headline. Wrap words in *asterisks* to highlight them.",
+      "valueType": "STRING"
+    },
+    "hero_cta_text": {
+      "defaultValue": {
+        "value": "Get started"
+      },
+      "description": "Landing page primary button text (good A/B test candidate).",
+      "valueType": "STRING"
+    }
+  }
+}

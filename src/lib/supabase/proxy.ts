@@ -1,8 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { supabaseEnv } from "@/config/env.public";
 
 /** Routes that need a signed-in user. */
-const PROTECTED_PREFIXES = ["/dashboard"];
+const PROTECTED_PREFIXES = ["/dashboard", "/workouts", "/activity"];
 /** Routes a signed-in user shouldn't see. */
 const AUTH_ROUTES = ["/login"];
 
@@ -14,8 +15,8 @@ export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    supabaseEnv.url,
+    supabaseEnv.publishableKey,
     {
       cookies: {
         getAll() {

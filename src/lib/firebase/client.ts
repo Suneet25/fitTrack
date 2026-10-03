@@ -1,22 +1,11 @@
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
 import { getAnalytics, isSupported, type Analytics } from "firebase/analytics";
+import { firebaseEnv, isAnalyticsConfigured } from "@/config/env.public";
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
-};
+export { isFirebaseConfigured } from "@/config/env.public";
 
-export const isFirebaseConfigured = Boolean(
-  firebaseConfig.apiKey && firebaseConfig.appId && firebaseConfig.measurementId,
-);
-
-function getFirebaseApp(): FirebaseApp {
-  return getApps().length ? getApp() : initializeApp(firebaseConfig);
+export function getFirebaseApp(): FirebaseApp {
+  return getApps().length ? getApp() : initializeApp(firebaseEnv);
 }
 
 let analyticsPromise: Promise<Analytics | null> | null = null;
@@ -27,7 +16,7 @@ let analyticsPromise: Promise<Analytics | null> | null = null;
  * (e.g. some privacy modes) — so callers never have to guard.
  */
 export function getAnalyticsInstance(): Promise<Analytics | null> {
-  if (typeof window === "undefined" || !isFirebaseConfigured) {
+  if (typeof window === "undefined" || !isAnalyticsConfigured) {
     return Promise.resolve(null);
   }
   analyticsPromise ??= isSupported()

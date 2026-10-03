@@ -56,6 +56,19 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
   return { status: "success", event: "sign_up", userId: data.user.id, next };
 }
 
+export async function signInWithGoogle(formData: FormData) {
+  const next = safeNext(String(formData.get("next") ?? ""));
+  const origin = (await headers()).get("origin") ?? "";
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${origin}/auth/confirm?next=${encodeURIComponent(next)}` },
+  });
+  if (error || !data.url) redirect("/login?error=oauth");
+
+  redirect(data.url);
+}
+
 export async function signOut() {
   const supabase = await createClient();
   await supabase.auth.signOut();
